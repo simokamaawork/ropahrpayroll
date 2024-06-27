@@ -1,0 +1,40 @@
+databases:
+  - name: ropa
+    plan: free
+    databaseName: ropa
+    user: root
+
+services:
+  - type: web
+    plan: free
+    name: ropa
+    runtime: docker
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ropa
+          property: connectionString
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: APP_KEY
+        sync: false
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: WEBROOT
+        value: /var/www/html/public
+      - key: RUN_SCRIPTS
+        value: 1
+      - key: REAL_IP_HEADER
+        value: 1
+      - key: SKIP_COMPOSER
+        value: 1
+    buildCommand: |
+      composer install --optimize-autoloader --no-dev
+      php artisan key:generate
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache

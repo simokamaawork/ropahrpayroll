@@ -1,9 +1,8 @@
 server {
   # Render provisions and terminates SSL
-  listen 0.0.0.0:$PORT;
-  listen [::]:$PORT;
+  listen 80;
 
-  # Make site accessible from any hostname
+  # Make site accessible from http://localhost/
   server_name _;
 
   root /var/www/html/public;
@@ -16,7 +15,7 @@ server {
   error_log /dev/stdout info;
   access_log /dev/stdout;
 
-  # Block access to sensitive information about git
+  # block access to sensitive information about git
   location /.git {
     deny all;
     return 403;
@@ -50,7 +49,7 @@ server {
     include fastcgi_params;
   }
 
-  # Deny access to dot files
+  # deny access to . files
   location ~ /\. {
     log_not_found off;
     deny all;
