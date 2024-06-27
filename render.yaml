@@ -1,18 +1,18 @@
 databases:
-  - name: laravel_memcache_db
+  - name: ropa
     plan: free
-    databaseName: laravel_memcache_db
-    user: laravel_memcache_db
+    databaseName: ropahr
+    user: root
 
 services:
   - type: web
     plan: free
-    name: laravel_memcache
+    name: ropa
     runtime: docker
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: laravel_memcache_db
+          name: ropahr
           property: connectionString
       - key: DB_CONNECTION
         value: pgsql
