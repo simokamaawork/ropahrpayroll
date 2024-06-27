@@ -7812,7 +7812,6 @@
     "symfony/var-dumper": "<6.3",
     "twig/twig": "<2.13"
 },
-
             "provide": {
                 "psr/log-implementation": "1.0|2.0|3.0"
             },
