@@ -35,7 +35,14 @@ jobs:
           extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo, tokenizer, xml
       
       - name: Copy .env
-        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+        run: |
+          cp .env.example .env
+          echo "DB_CONNECTION=pgsql" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_DATABASE=ropahr" >> .env
+          echo "DB_USERNAME=root" >> .env
+          echo "DB_PASSWORD=wWnF8Jm4HYD366vlzcUZEh4A7G6A8DOG" >> .env
       
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-interaction --no-scripts --no-progress
@@ -45,15 +52,6 @@ jobs:
       
       - name: Set Permissions
         run: chmod -R 777 storage bootstrap/cache
-      
-      - name: Set up PostgreSQL
-        run: |
-          echo "DB_CONNECTION=pgsql" >> .env
-          echo "DB_HOST=127.0.0.1" >> .env
-          echo "DB_PORT=5432" >> .env
-          echo "DB_DATABASE=ropahr" >> .env
-          echo "DB_USERNAME=root" >> .env
-          echo "DB_PASSWORD=wWnF8Jm4HYD366vlzcUZEh4A7G6A8DOG" >> .env
       
       - name: Create Database
         run: psql -h 127.0.0.1 -U root -c 'CREATE DATABASE ropahr;' || true

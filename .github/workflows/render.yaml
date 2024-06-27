@@ -1,129 +1,63 @@
-databases:
-  - name: laravel_memcache_db
-    plan: free
-    databaseName: laravel_memcache_db
-    user: laravel_memcache_db
+name: Laravel CI/CD
 
-services:
-  - type: web
-    plan: free
-    name: laravel_memcache
-    runtime: docker
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: laravel_memcache_db
-          property: connectionString
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: APP_KEY
-        sync: false
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: false
-      - key: LOG_CHANNEL
-        value: stderr
-      - key: WEBROOT
-        value: /var/www/html/public
-      - key: RUN_SCRIPTS
-        value: 1
-      - key: REAL_IP_HEADER
-        value: 1
-      - key: SKIP_COMPOSER
-        value: 1
-    buildCommand: |
-      composer install --optimize-autoloader --no-dev
-      php artisan key:generate
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
-    startCommand: |
-      chmod -R 777 storage bootstrap/cache
-      php artisan serve --host 0.0.0.0 --port $PORT
-databases:
-  - name: laravel_memcache_db
-    plan: free
-    databaseName: laravel_memcache_db
-    user: laravel_memcache_db
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-services:
-  - type: web
-    plan: free
-    name: laravel_memcache
-    runtime: docker
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: laravel_memcache_db
-          property: connectionString
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: APP_KEY
-        sync: false
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: false
-      - key: LOG_CHANNEL
-        value: stderr
-      - key: WEBROOT
-        value: /var/www/html/public
-      - key: RUN_SCRIPTS
-        value: 1
-      - key: REAL_IP_HEADER
-        value: 1
-      - key: SKIP_COMPOSER
-        value: 1
-    buildCommand: |
-      composer install --optimize-autoloader --no-dev
-      php artisan key:generate
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
-    startCommand: |
-      chmod -R 777 storage bootstrap/cache
-      php artisan serve --host 0.0.0.0 --port $PORT
-databases:
-  - name: laravel_memcache_db
-    plan: free
-    databaseName: laravel_memcache_db
-    user: laravel_memcache_db
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
 
-services:
-  - type: web
-    plan: free
-    name: laravel_memcache
-    runtime: docker
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: laravel_memcache_db
-          property: connectionString
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: APP_KEY
-        sync: false
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: false
-      - key: LOG_CHANNEL
-        value: stderr
-      - key: WEBROOT
-        value: /var/www/html/public
-      - key: RUN_SCRIPTS
-        value: 1
-      - key: REAL_IP_HEADER
-        value: 1
-      - key: SKIP_COMPOSER
-        value: 1
-    buildCommand: |
-      composer install --optimize-autoloader --no-dev
-      php artisan key:generate
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
-    startCommand: |
-      chmod -R 777 storage bootstrap/cache
-      php artisan serve --host 0.0.0.0 --port $PORT
+    services:
+      postgresql:
+        image: postgres:13
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: wWnF8Jm4HYD366vlzcUZEh4A7G6A8DOG
+          POSTGRES_DB: ropahr
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo, tokenizer, xml
+      
+      - name: Copy .env
+        run: |
+          cp .env.example .env
+          echo "DB_CONNECTION=pgsql" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_DATABASE=ropahr" >> .env
+          echo "DB_USERNAME=root" >> .env
+          echo "DB_PASSWORD=wWnF8Jm4HYD366vlzcUZEh4A7G6A8DOG" >> .env
+      
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-scripts --no-progress
+      
+      - name: Generate Application Key
+        run: php artisan key:generate
+      
+      - name: Set Permissions
+        run: chmod -R 777 storage bootstrap/cache
+      
+      - name: Create Database
+        run: psql -h 127.0.0.1 -U root -c 'CREATE DATABASE ropahr;' || true
+      
+      - name: Run Migrations
+        run: php artisan migrate --force
+      
+      - name: Run Tests
+        run: php artisan test
