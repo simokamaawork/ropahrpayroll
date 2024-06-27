@@ -1,5 +1,5 @@
 databases:
-  - name: ropahr
+  - name: ropa
     plan: free
     databaseName: ropa
     user: root
