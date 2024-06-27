@@ -1,23 +1,25 @@
 name: Laravel
+
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
 jobs:
   laravel-tests:
     runs-on: ubuntu-latest
+
     services:
-      postgresql:
-        image: postgres:13
+      mysql:
+        image: mysql:5.7
         env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: wWnF8Jm4HYD366vlzcUZEh4A7G6A8DOG
-          POSTGRES_DB: ropahr
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: laravel
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd="pg_isready"
+          --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -37,17 +39,16 @@ jobs:
       run: php artisan key:generate
     - name: Set Permissions
       run: chmod -R 777 storage bootstrap/cache
-    - name: Set up PostgreSQL
-      run: |
-        echo "DB_CONNECTION=pgsql" >> .env
-        echo "DB_HOST=dpg-cpu2mt52ng1s73ea15rg-a.oregon-postgres.render.com" >> .env
-        echo "DB_PORT=5432" >> .env
-        echo "DB_DATABASE=ropahr" >> .env
-        echo "DB_USERNAME=root" >> .env
-        echo "DB_PASSWORD=wWnF8Jm4HYD366vlzcUZEh4A7G6A8DOG" >> .env
     - name: Create Database
       run: |
-        psql -h dpg-cpu2mt52ng1s73ea15rg-a.oregon-postgres.render.com -U root ropahr -c 'CREATE DATABASE ropahr;'
+        mysql -u root -proot -e 'CREATE DATABASE IF NOT EXISTS laravel;'
         php artisan migrate --force
     - name: Run Tests
+      env:
+        DB_CONNECTION: mysql
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: laravel
+        DB_USERNAME: root
+        DB_PASSWORD: root
       run: php artisan test
